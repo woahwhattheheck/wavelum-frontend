@@ -50,7 +50,7 @@ export default function RootLayout({
         <WebVitals />
         <ThemeProvider>
           <QueryProvider>
-            <div id="main-content" role="main">
+            <div id="main-content" tabIndex={-1}>
               {children}
             </div>
           </QueryProvider>
