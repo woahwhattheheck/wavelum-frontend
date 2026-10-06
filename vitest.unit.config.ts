@@ -14,6 +14,7 @@ export default defineConfig({
     name: 'unit',
     coverage: {
       provider: 'v8',
+      reportOnFailure: true,
       reportsDirectory: 'coverage/unit',
       reporter: ['text', 'html', 'lcov', 'json-summary'],
       // Include untested source so removing tests cannot improve coverage.
