@@ -25,11 +25,14 @@ import axios, {
 } from 'axios';
 
 import { ApiError } from '@/src/lib/errors';
+import { validatePublicEnv } from '@/src/lib/env';
 import type { ApiErrorBody } from '@/src/types/api';
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
 
-const DEFAULT_BASE_URL = 'http://localhost:4000';
+const publicEnv = validatePublicEnv({
+  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+});
 const DEFAULT_TIMEOUT = 30_000; // 30s
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
@@ -37,7 +40,7 @@ const RETRY_DELAY_MS = 1000;
 /* ─── Axios Instance ─────────────────────────────────────────────────────── */
 
 export const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_BASE_URL,
+  baseURL: publicEnv.NEXT_PUBLIC_API_URL,
   timeout: DEFAULT_TIMEOUT,
   withCredentials: false, // JWT in Authorization header, not cookies
   headers: {
