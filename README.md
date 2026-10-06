@@ -76,8 +76,9 @@ All client-exposed variables are prefixed with `NEXT_PUBLIC_` so that Next.js in
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `NEXT_PUBLIC_API_URL` | Yes | `http://localhost:4000` | Base URL of the Lumina backend API. |
+| `NEXT_PUBLIC_SEP10_AUTH_PATH` | No | `/auth/sep10` | Backend path for SEP-10 challenge/token exchange. |
 | `NEXT_PUBLIC_SOROBAN_RPC_URL` | Yes | `https://soroban-testnet.stellar.org` | Soroban RPC endpoint used for contract reads and transaction submission. |
-| `NEXT_PUBLIC_NETWORK` | Yes | `testnet` | Active Stellar network: `testnet`, `futurenet`, or `mainnet`. |
+| `NEXT_PUBLIC_SOROBAN_NETWORK` | Yes | `testnet` | Active Stellar network: `testnet`, `futurenet`, or `mainnet`. |
 | `NEXT_PUBLIC_SENTRY_DSN` | No | empty | Sentry DSN for client-side error reporting. Leave empty to disable. |
 | `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID` | No | empty | WalletConnect project ID for wallet sessions. |
 
