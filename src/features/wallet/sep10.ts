@@ -10,13 +10,14 @@
  * @see https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0010.md
  */
 
-const DEFAULT_API_URL = 'http://localhost:4000';
-const DEFAULT_AUTH_PATH = '/auth/sep10';
+import { validatePublicEnv } from '../../lib/env';
 
 function authEndpoint(): string {
-  const base = process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_URL;
-  const path = process.env.NEXT_PUBLIC_SEP10_AUTH_PATH ?? DEFAULT_AUTH_PATH;
-  return `${base}${path}`;
+  const env = validatePublicEnv({
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_SEP10_AUTH_PATH: process.env.NEXT_PUBLIC_SEP10_AUTH_PATH,
+  });
+  return `${env.NEXT_PUBLIC_API_URL}${env.NEXT_PUBLIC_SEP10_AUTH_PATH}`;
 }
 
 export type Sep10Challenge = {
