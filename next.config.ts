@@ -3,6 +3,20 @@ import { withSentryConfig } from '@sentry/nextjs';
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 
+import { validatePublicEnv } from './src/lib/env';
+
+validatePublicEnv(
+  {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_SEP10_AUTH_PATH: process.env.NEXT_PUBLIC_SEP10_AUTH_PATH,
+    NEXT_PUBLIC_SOROBAN_RPC_URL: process.env.NEXT_PUBLIC_SOROBAN_RPC_URL,
+    NEXT_PUBLIC_NETWORK: process.env.NEXT_PUBLIC_NETWORK,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
+  },
+  { requireConfigured: true },
+);
+
 const withBundleAnalyzer = createBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
