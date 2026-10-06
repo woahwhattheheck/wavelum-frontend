@@ -1,63 +1,28 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { readFileSync } from 'node:fs';
 
-const axeSource = readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8');
-
-const auditedRoutes = [
-  '/en',
-  '/en/dashboard',
-  '/en/dashboard/vaults',
-  '/en/dashboard/claims',
-  '/en/dashboard/streaming',
-  '/en/dashboard/analytics',
-  '/en/dashboard/admin',
+const locales = ['en', 'ja', 'ko', 'zh'] as const;
+const routeSuffixes = [
+  '',
+  '/dashboard',
+  '/dashboard/vaults',
+  '/dashboard/claims',
+  '/dashboard/streaming',
+  '/dashboard/analytics',
+  '/dashboard/admin',
 ] as const;
 
-type AxeNode = {
-  target: string[];
-  failureSummary?: string;
-};
-
-type AxeViolation = {
-  id: string;
-  impact: string | null;
-  help: string;
-  helpUrl: string;
-  nodes: AxeNode[];
-};
-
-type AxeResult = {
-  testEngine: { name: string; version: string };
-  testEnvironment: Record<string, string>;
-  testRunner: { name: string };
-  timestamp: string;
-  url: string;
-  violations: AxeViolation[];
-};
+const auditedRoutes = locales.flatMap((locale) =>
+  routeSuffixes.map((suffix) => `/${locale}${suffix}`),
+);
+type AxeResult = Awaited<ReturnType<AxeBuilder['analyze']>>;
+type AxeViolation = AxeResult['violations'][number];
 
 async function auditPage(page: Page): Promise<AxeResult> {
-  await page.addScriptTag({ content: axeSource });
-
-  return page.evaluate(async () => {
-    const axe = (window as unknown as {
-      axe: {
-        run: (
-          context: Document,
-          options: Record<string, unknown>,
-        ) => Promise<AxeResult>;
-      };
-    }).axe;
-
-    return axe.run(document, {
-      runOnly: {
-        type: 'tag',
-        values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'],
-      },
-      resultTypes: ['violations'],
-    });
-  });
+  return new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .analyze();
 }
-
 function formatViolations(violations: AxeViolation[]): string {
   if (violations.length === 0) return 'No accessibility violations detected.';
 
@@ -73,7 +38,7 @@ function formatViolations(violations: AxeViolation[]): string {
 }
 
 async function attachAxeReport(testInfo: TestInfo, route: string, result: AxeResult) {
-  const slug = route === '/en' ? 'home' : route.replace(/^\/en\/?/, '').replaceAll('/', '-');
+  const slug = route.replace(/^\//, '').replaceAll('/', '-') || 'root';
 
   await testInfo.attach(`${slug}-axe.json`, {
     body: Buffer.from(JSON.stringify(result, null, 2)),
