@@ -14,7 +14,7 @@ validatePublicEnv(
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
   },
-  { requireConfigured: true },
+  { requireConfigured: process.env.CI !== 'true' || process.env.GITHUB_WORKFLOW === 'Environment validation' },
 );
 
 const withBundleAnalyzer = createBundleAnalyzer({
