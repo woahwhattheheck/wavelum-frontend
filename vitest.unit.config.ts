@@ -12,6 +12,15 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     name: 'unit',
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.d.ts', 'src/**/*.stories.*', 'src/**/__tests__/**', 'src/**/*.{test,spec}.{ts,tsx}'],
+      reportsDirectory: 'coverage/unit',
+      reporter: ['text', 'html', 'lcov', 'json-summary'],
+      reportOnFailure: true,
+      thresholds: { lines: 70, branches: 60, functions: 65, statements: 70 },
+    },
     environment: 'node',
     include: ['src/**/__tests__/**/*.{test,spec}.{ts,tsx}', 'src/**/*.{test,spec}.{ts,tsx}'],
     exclude: [
