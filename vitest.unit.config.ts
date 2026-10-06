@@ -12,6 +12,15 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     name: 'unit',
+    coverage: {
+      provider: 'v8',
+      reportsDirectory: 'coverage/unit',
+      reporter: ['text', 'html', 'lcov', 'json-summary'],
+      // Include untested source so removing tests cannot improve coverage.
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.stories.*', 'src/**/*.{test,spec}.{ts,tsx}', 'src/**/__tests__/**', 'src/**/*.d.ts'],
+      thresholds: { lines: 70, branches: 60, functions: 65, statements: 70 },
+    },
     environment: 'node',
     include: ['src/**/__tests__/**/*.{test,spec}.{ts,tsx}', 'src/**/*.{test,spec}.{ts,tsx}'],
     exclude: [
