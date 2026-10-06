@@ -29,7 +29,7 @@ jobs:
               const comments = await github.paginate(github.rest.issues.listComments, {
                 ...context.repo, issue_number: pr.number,
               });
-              const previous = comments.find(c => c.user.type === 'Bot' && c.body?.startsWith(marker));
+              const previous = comments.find(c => c.user.login === 'github-actions[bot]' && c.body?.startsWith(marker));
               if (previous) {
                 await github.rest.issues.updateComment({ ...context.repo, comment_id: previous.id, body });
               } else {
