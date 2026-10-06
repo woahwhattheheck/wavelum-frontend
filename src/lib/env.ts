@@ -86,12 +86,26 @@ export function validatePublicEnv(source: PublicEnvSource = process.env): Public
   return parsePublicEnv(selectPublicEnv(source));
 }
 
+// Keep each public variable as a direct property access so Next.js can inline
+// its build-time value into browser bundles. Passing process.env as an object
+// would leave client consumers with the local/test fallbacks instead.
+function readPublicEnv(): PublicEnvSource {
+  return {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_SEP10_AUTH_PATH: process.env.NEXT_PUBLIC_SEP10_AUTH_PATH,
+    NEXT_PUBLIC_SOROBAN_RPC_URL: process.env.NEXT_PUBLIC_SOROBAN_RPC_URL,
+    NEXT_PUBLIC_SOROBAN_NETWORK: process.env.NEXT_PUBLIC_SOROBAN_NETWORK,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
+  };
+}
+
 /**
  * Typed application access. Fallbacks keep isolated unit tests and non-Next
  * consumers deterministic; Next.js builds and dev startup pass through
  * validatePublicEnv() first and cannot silently miss a required variable.
  */
-export function getPublicEnv(source: PublicEnvSource = process.env): PublicEnv {
+export function getPublicEnv(source: PublicEnvSource = readPublicEnv()): PublicEnv {
   const selected = selectPublicEnv(source);
   return parsePublicEnv({
     NEXT_PUBLIC_API_URL:
