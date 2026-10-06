@@ -1,0 +1,32 @@
+name: Environment validation
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  validate-env:
+    name: Validate public environment contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check documented public environment variables
+        run: npm run env:check
+
+      - name: Load minimal documented build environment
+        run: cp .env.example .env.local
+
+      - name: Build with the minimal valid environment
+        run: npm run build
