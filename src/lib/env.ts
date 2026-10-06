@@ -87,9 +87,9 @@ export function validatePublicEnv(source: PublicEnvSource = process.env): Public
 }
 
 /**
- * Typed application access. Defaults preserve local/test ergonomics; production
- * builds still pass through validatePublicEnv() first and therefore cannot
- * silently ship with a missing required variable.
+ * Typed application access. Fallbacks keep isolated unit tests and non-Next
+ * consumers deterministic; Next.js builds and dev startup pass through
+ * validatePublicEnv() first and cannot silently miss a required variable.
  */
 export function getPublicEnv(source: PublicEnvSource = process.env): PublicEnv {
   const selected = selectPublicEnv(source);

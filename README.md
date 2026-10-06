@@ -71,10 +71,10 @@ npm run dev
 
 ## Environment variables
 
-All client-exposed variables are prefixed with `NEXT_PUBLIC_` so that Next.js inlines them into the browser bundle. Copy `.env.example` to `.env.local` and fill in the values for your environment.
+All client-exposed variables are prefixed with `NEXT_PUBLIC_` so that Next.js inlines them into the browser bundle. Copy `.env.example` to `.env.local` and fill in the values for your environment. The required variables are validated before Next.js compilation starts; the values below are examples from `.env.example`, not implicit build defaults.
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
+| Variable | Required at build | Example value | Description |
+|----------|-------------------|---------------|-------------|
 | `NEXT_PUBLIC_API_URL` | Yes | `http://localhost:4000` | Base URL of the Lumina backend API. |
 | `NEXT_PUBLIC_SEP10_AUTH_PATH` | No | `/auth/sep10` | Backend path for SEP-10 challenge/token exchange. |
 | `NEXT_PUBLIC_SOROBAN_RPC_URL` | Yes | `https://soroban-testnet.stellar.org` | Soroban RPC endpoint used for contract reads and transaction submission. |
