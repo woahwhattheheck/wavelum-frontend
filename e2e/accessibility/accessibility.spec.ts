@@ -52,6 +52,8 @@ test.describe('WCAG A/AA browser audits', () => {
       const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
       expect(response?.ok(), `${route} should return a successful response`).toBeTruthy();
 
+      const expectedLocale = route.split('/')[1]!;
+      await expect(page.locator('html')).toHaveAttribute('lang', expectedLocale);
       await page.locator('main').first().waitFor({ state: 'visible' });
       await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => undefined);
 
