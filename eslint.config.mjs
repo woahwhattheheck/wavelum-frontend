@@ -4,6 +4,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import pluginImport from "eslint-plugin-import";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 import storybook from "eslint-plugin-storybook";
 
 const eslintConfig = defineConfig([
@@ -22,6 +23,7 @@ const eslintConfig = defineConfig([
       import: pluginImport,
     },
     rules: {
+      ...jsxA11y.configs.recommended.rules,
       "import/order": [
         "warn",
         {
