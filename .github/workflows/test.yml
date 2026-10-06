@@ -147,6 +147,24 @@ jobs:
           if-no-files-found: ignore
 
   # ───────────────────────────────────────────────────────────────────────────
+  # Translation catalogs must stay complete and structurally aligned. Unused
+  # keys are reported as cleanup warnings without blocking the build.
+  # ───────────────────────────────────────────────────────────────────────────
+  i18n-check:
+    name: Translation completeness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Validate translation catalogs
+        run: npm run i18n:check
+
+  # ───────────────────────────────────────────────────────────────────────────
   # Bundle size analysis — builds with @next/bundle-analyzer, publishes the
   # interactive treemaps as artifacts, and enforces size budgets.
   # ───────────────────────────────────────────────────────────────────────────
