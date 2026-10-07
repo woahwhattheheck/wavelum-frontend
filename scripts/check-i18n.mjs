@@ -6,7 +6,8 @@ const root = process.cwd();
 const messagesDir = path.join(root, 'messages');
 const scanDirs = ['app', 'src'];
 const referenceLocale = 'en';
-const MIN_COVERAGE = Number.parseFloat(process.env.I18N_MIN_COVERAGE ?? '90');
+const coverageSetting = (process.env.I18N_MIN_COVERAGE ?? '90').trim();
+const MIN_COVERAGE = Number(coverageSetting);
 
 const TRANSLATOR_BINDING_PATTERN =
   /(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:await\s+)?(?:useTranslations|getTranslations)\s*\(([^)]*)\)/g;
@@ -71,6 +72,15 @@ function collectUsedKeys(content) {
 }
 
 async function main() {
+  if (
+    coverageSetting === '' ||
+    !Number.isFinite(MIN_COVERAGE) ||
+    MIN_COVERAGE < 0 ||
+    MIN_COVERAGE > 100
+  ) {
+    throw new Error('I18N_MIN_COVERAGE must be a number between 0 and 100.');
+  }
+
   const locales = await loadLocales();
   if (!locales.has(referenceLocale)) {
     console.error(`Reference locale messages/${referenceLocale}.json not found.`);
