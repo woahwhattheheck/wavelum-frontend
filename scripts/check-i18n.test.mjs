@@ -8,12 +8,17 @@ import { test } from 'node:test';
 
 const checker = fileURLToPath(new URL('./check-i18n.mjs', import.meta.url));
 
-function check(reference, translated) {
+function check(reference, translated, configuredLocales = ['en', 'ja']) {
   const cwd = mkdtempSync(path.join(tmpdir(), 'sanctifier-i18n-'));
   try {
     mkdirSync(path.join(cwd, 'messages'));
+    mkdirSync(path.join(cwd, 'i18n'));
     writeFileSync(path.join(cwd, 'messages/en.json'), JSON.stringify(reference));
     writeFileSync(path.join(cwd, 'messages/ja.json'), JSON.stringify(translated));
+    writeFileSync(
+      path.join(cwd, 'i18n/routing.ts'),
+      `export const routing = defineRouting({ locales: ${JSON.stringify(configuredLocales)}, defaultLocale: 'en' });\n`,
+    );
     return spawnSync(process.execPath, [checker], {
       cwd,
       encoding: 'utf8',
@@ -45,4 +50,14 @@ test('valid nested locale strings still pass with complete coverage', () => {
   );
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /i18n check passed/);
+});
+
+test('configured locale without a catalog fails closed', () => {
+  const result = check(
+    { common: { save: 'Save' } },
+    { common: { save: 'Guardar' } },
+    ['en', 'ja', 'ko'],
+  );
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /missing messages\/ko\.json/);
 });
