@@ -50,6 +50,14 @@ describe('validatePublicEnv', () => {
       }),
     ).toThrowError(/NEXT_PUBLIC_SENTRY_DSN/);
 
+    const sentryDsn = 'https://public123@errors.example.test/42';
+    expect(
+      validatePublicEnv({
+        ...validRequiredEnv,
+        NEXT_PUBLIC_SENTRY_DSN: sentryDsn,
+      }).NEXT_PUBLIC_SENTRY_DSN,
+    ).toBe(sentryDsn);
+
     expect(validatePublicEnv({
       ...validRequiredEnv,
       NEXT_PUBLIC_API_URL: 'http://localhost:4000',
