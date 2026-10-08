@@ -45,6 +45,23 @@ const publicApiUrl = publicHttpUrl.refine((value) => {
   return !url.search && !url.hash;
 }, 'API base URL must not include a query string or fragment');
 
+const publicSentryDsn = z
+  .string()
+  .trim()
+  .url()
+  .refine((value) => {
+    try {
+      const url = new URL(value);
+      return (
+        (url.protocol === 'https:' || url.protocol === 'http:') &&
+        url.username.length > 0 &&
+        url.password.length === 0
+      );
+    } catch {
+      return false;
+    }
+  }, 'Must be an HTTP(S) Sentry DSN with a public key and no private credential');
+
 // SEP-10 challenge+token share one route. A query, fragment, traversal,
 // encoded slash or duplicate separator breaks challenge-account binding
 // and can make GET and POST resolve different backend paths.
@@ -58,7 +75,7 @@ export const publicEnvSchema = z.object({
   NEXT_PUBLIC_SEP10_AUTH_PATH: sep10AuthPath.default('/auth/sep10'),
   NEXT_PUBLIC_SOROBAN_RPC_URL: publicHttpUrl,
   NEXT_PUBLIC_SOROBAN_NETWORK: z.enum(['testnet', 'futurenet', 'mainnet']),
-  NEXT_PUBLIC_SENTRY_DSN: z.union([publicHttpUrl, z.literal('')]).default(''),
+  NEXT_PUBLIC_SENTRY_DSN: z.union([publicSentryDsn, z.literal('')]).default(''),
   NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: z.string().trim().default(''),
 });
 
