@@ -38,9 +38,24 @@ const publicHttpUrl = z
     }
   }, 'Must be an HTTP(S) URL without embedded credentials');
 
+const publicApiUrl = publicHttpUrl.refine((value) => {
+  const url = new URL(value);
+  // An HTTP endpoint prefix must not carry a query/fragment; challenge
+  // requests add their own account query and must reach the same API path.
+  return !url.search && !url.hash;
+}, 'API base URL must not include a query string or fragment');
+
+// SEP-10 challenge+token share one route. A query, fragment, traversal,
+// encoded slash or duplicate separator breaks challenge-account binding
+// and can make GET and POST resolve different backend paths.
+const sep10AuthPath = z.string().trim().refine((value) => {
+  if (!/^\/[A-Za-z0-9_.~-]+(?:\/[A-Za-z0-9_.~-]+)*\/?$/.test(value)) return false;
+  return value.split('/').every((segment) => segment !== '.' && segment !== '..');
+}, 'Must be a canonical slash-prefixed API path without query, fragment or traversal');
+
 export const publicEnvSchema = z.object({
-  NEXT_PUBLIC_API_URL: publicHttpUrl,
-  NEXT_PUBLIC_SEP10_AUTH_PATH: z.string().trim().startsWith('/').default('/auth/sep10'),
+  NEXT_PUBLIC_API_URL: publicApiUrl,
+  NEXT_PUBLIC_SEP10_AUTH_PATH: sep10AuthPath.default('/auth/sep10'),
   NEXT_PUBLIC_SOROBAN_RPC_URL: publicHttpUrl,
   NEXT_PUBLIC_SOROBAN_NETWORK: z.enum(['testnet', 'futurenet', 'mainnet']),
   NEXT_PUBLIC_SENTRY_DSN: z.union([publicHttpUrl, z.literal('')]).default(''),

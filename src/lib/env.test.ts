@@ -73,4 +73,37 @@ describe('validatePublicEnv', () => {
       NEXT_PUBLIC_SOROBAN_NETWORK: 'testnet',
     });
   });
+  it('rejects ambiguous SEP-10 auth paths and query-bearing API prefixes', () => {
+    for (const path of [
+      '//other.example/auth',
+      '/auth//sep10',
+      '/auth/../sep10',
+      '/auth/./sep10',
+      '/auth/sep10?account=spoof',
+      '/auth/sep10#fragment',
+      '/auth\\sep10',
+      '/auth/%2e%2e/sep10',
+    ]) {
+      expect(() => validatePublicEnv({
+        ...validRequiredEnv,
+        NEXT_PUBLIC_SEP10_AUTH_PATH: path,
+      })).toThrowError(/NEXT_PUBLIC_SEP10_AUTH_PATH/);
+    }
+
+    for (const url of [
+      'https://api.example.test/base?redirect=true',
+      'https://api.example.test/base#fragment',
+    ]) {
+      expect(() => validatePublicEnv({
+        ...validRequiredEnv, NEXT_PUBLIC_API_URL: url,
+      })).toThrowError(/NEXT_PUBLIC_API_URL/);
+    }
+
+    expect(validatePublicEnv({
+      ...validRequiredEnv,
+      NEXT_PUBLIC_API_URL: 'https://api.example.test/base/',
+      NEXT_PUBLIC_SEP10_AUTH_PATH: '/auth/v1.0/sep10',
+    }).NEXT_PUBLIC_SEP10_AUTH_PATH).toBe('/auth/v1.0/sep10');
+  });
+
 });
