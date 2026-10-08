@@ -15,11 +15,20 @@ const TRANSLATOR_CALL_PATTERN = (name) =>
   new RegExp(`\\b${name}(?:\\s*\\.\\s*(?:rich|markup|raw))?\\s*\\(\\s*['"]([^'"]+)['"]`, 'g');
 
 function flattenMessages(node, prefix, out) {
+  // next-intl accepts nested namespaces with string message leaves. An array,
+  // null, numeric or empty leaf is not a usable translation; merely counting
+  // its key as present would let CI approve a broken runtime locale.
+  if (node === null || Array.isArray(node) || typeof node !== 'object') {
+    throw new Error(`Translation namespace "${prefix || '<root>'}" must be an object.`);
+  }
   for (const [key, value] of Object.entries(node)) {
     const fullKey = prefix ? `${prefix}.${key}` : key;
     if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
       flattenMessages(value, fullKey, out);
     } else {
+      if (typeof value !== 'string' || value.trim().length === 0) {
+        throw new Error(`Translation "${fullKey}" must be a non-empty string.`);
+      }
       out.set(fullKey, value);
     }
   }
