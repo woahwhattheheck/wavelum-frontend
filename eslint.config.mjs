@@ -21,6 +21,7 @@ const eslintConfig = defineConfig([
   {
     plugins: {
       import: pluginImport,
+      "jsx-a11y": jsxA11y,
     },
     rules: {
       ...jsxA11y.configs.recommended.rules,
