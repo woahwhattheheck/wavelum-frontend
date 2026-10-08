@@ -79,33 +79,57 @@ test.describe('Keyboard-critical flows', () => {
     await expect(page.locator('#main-content')).toBeFocused();
   });
 
-  test('dashboard tab order advances without trapping focus', async ({ page }) => {
+  test('dashboard tab order reaches every visible enabled interactive control', async ({ page }) => {
     await page.goto('/en/dashboard', { waitUntil: 'domcontentloaded' });
     await page.locator('main').waitFor({ state: 'visible' });
 
-    const focusSequence: string[] = [];
+    const focusableSelector = [
+      'a[href]',
+      'button:not([disabled])',
+      'input:not([disabled])',
+      'select:not([disabled])',
+      'textarea:not([disabled])',
+      'summary',
+      '[contenteditable="true"]',
+      '[tabindex]:not([tabindex="-1"])',
+    ].join(',');
 
-    for (let step = 0; step < 12; step += 1) {
+    const expectedTargets = await page.locator(focusableSelector).evaluateAll((elements) => {
+      let index = 0;
+      return elements.flatMap((element) => {
+        const node = element as HTMLElement;
+        const style = getComputedStyle(node);
+        const rect = node.getBoundingClientRect();
+        const excluded =
+          node.tabIndex < 0 ||
+          node.getAttribute('aria-hidden') === 'true' ||
+          node.closest('[inert]') !== null ||
+          style.display === 'none' ||
+          style.visibility === 'hidden' ||
+          rect.width === 0 ||
+          rect.height === 0;
+
+        if (excluded) return [];
+
+        const target = `focus-target-${index++}`;
+        node.dataset.a11yTabTarget = target;
+        return [target];
+      });
+    });
+
+    expect(expectedTargets.length).toBeGreaterThan(0);
+    const visited = new Set<string>();
+
+    for (let step = 0; step < expectedTargets.length + 5; step += 1) {
       await page.keyboard.press('Tab');
-      await expect(page.locator(':focus')).toBeVisible();
-
-      focusSequence.push(
-        await page.evaluate(() => {
-          const element = document.activeElement as HTMLElement | null;
-          if (!element) return 'none';
-
-          const label =
-            element.getAttribute('aria-label') ??
-            element.getAttribute('title') ??
-            element.textContent?.trim().slice(0, 80) ??
-            '';
-
-          return `${element.tagName.toLowerCase()}#${element.id}.${element.className}:${label}`;
-        }),
+      const target = await page.evaluate(
+        () => (document.activeElement as HTMLElement | null)?.dataset.a11yTabTarget ?? '',
       );
+      if (target) visited.add(target);
+      if (expectedTargets.every((candidate) => visited.has(candidate))) break;
     }
 
-    expect(new Set(focusSequence).size, focusSequence.join('\n')).toBeGreaterThanOrEqual(5);
-    expect(focusSequence).not.toContain('body#.:');
+    const unreachable = expectedTargets.filter((target) => !visited.has(target));
+    expect(unreachable, `Unreachable keyboard targets: ${unreachable.join(', ')}`).toEqual([]);
   });
 });
