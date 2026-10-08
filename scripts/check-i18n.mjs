@@ -4,6 +4,7 @@ import process from 'node:process';
 
 const root = process.cwd();
 const messagesDir = path.join(root, 'messages');
+const routingConfigPath = path.join(root, 'i18n', 'routing.ts');
 const scanDirs = ['app', 'src'];
 const referenceLocale = 'en';
 const coverageSetting = (process.env.I18N_MIN_COVERAGE ?? '90').trim();
@@ -33,6 +34,19 @@ function flattenMessages(node, prefix, out) {
     }
   }
   return out;
+}
+
+async function loadConfiguredLocales() {
+  const source = await fs.readFile(routingConfigPath, 'utf8');
+  const localeList = source.match(/\blocales\s*:\s*\[([\s\S]*?)\]/);
+  if (!localeList) {
+    throw new Error('i18n/routing.ts must define a literal locales array.');
+  }
+  const locales = [...localeList[1].matchAll(/(['"])([^'"]+)\1/g)].map((match) => match[2]);
+  if (locales.length === 0 || new Set(locales).size !== locales.length) {
+    throw new Error('i18n/routing.ts locales must be a non-empty list of unique string literals.');
+  }
+  return locales;
 }
 
 async function loadLocales() {
@@ -94,7 +108,24 @@ async function main() {
     throw new Error('I18N_MIN_COVERAGE must be a number between 0 and 100.');
   }
 
+  const configuredLocales = await loadConfiguredLocales();
   const locales = await loadLocales();
+  const configuredSet = new Set(configuredLocales);
+  const missingCatalogs = configuredLocales.filter((locale) => !locales.has(locale));
+  const unexpectedCatalogs = [...locales.keys()].filter((locale) => !configuredSet.has(locale));
+  if (missingCatalogs.length > 0 || unexpectedCatalogs.length > 0) {
+    const problems = [];
+    if (missingCatalogs.length > 0) {
+      problems.push(`missing ${missingCatalogs.map((locale) => `messages/${locale}.json`).join(', ')}`);
+    }
+    if (unexpectedCatalogs.length > 0) {
+      problems.push(`not configured: ${unexpectedCatalogs.map((locale) => `messages/${locale}.json`).join(', ')}`);
+    }
+    throw new Error(`Locale catalog set must match i18n/routing.ts (${problems.join('; ')}).`);
+  }
+  if (!configuredSet.has(referenceLocale)) {
+    throw new Error(`Reference locale ${referenceLocale} is not configured in i18n/routing.ts.`);
+  }
   if (!locales.has(referenceLocale)) {
     console.error(`Reference locale messages/${referenceLocale}.json not found.`);
     process.exit(1);
