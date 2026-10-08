@@ -32,7 +32,11 @@ async function loadLocales() {
   for (const file of entries.filter((f) => f.endsWith('.json')).sort()) {
     const locale = path.basename(file, '.json');
     const raw = await fs.readFile(path.join(messagesDir, file), 'utf8');
-    locales.set(locale, flattenMessages(JSON.parse(raw), '', new Map()));
+    const flat = flattenMessages(JSON.parse(raw), '', new Map());
+    if (flat.size === 0) {
+      throw new Error(`Locale messages/${file} must contain at least one translation key.`);
+    }
+    locales.set(locale, flat);
   }
   return locales;
 }
