@@ -18,12 +18,32 @@ export const REQUIRED_PUBLIC_ENV_KEYS = [
 export type PublicEnvKey = (typeof PUBLIC_ENV_KEYS)[number];
 export type PublicEnvSource = Partial<Record<PublicEnvKey, string | undefined>>;
 
+// These values are compiled into browser code. WHATWG URLs also accept
+// javascript:, file:, and credentials in userinfo; none is a safe public HTTP
+// service endpoint. Validate transport and avoid emitting secrets to clients.
+const publicHttpUrl = z
+  .string()
+  .trim()
+  .url()
+  .refine((value) => {
+    try {
+      const url = new URL(value);
+      return (
+        (url.protocol === 'https:' || url.protocol === 'http:') &&
+        url.username.length === 0 &&
+        url.password.length === 0
+      );
+    } catch {
+      return false;
+    }
+  }, 'Must be an HTTP(S) URL without embedded credentials');
+
 export const publicEnvSchema = z.object({
-  NEXT_PUBLIC_API_URL: z.string().trim().url(),
+  NEXT_PUBLIC_API_URL: publicHttpUrl,
   NEXT_PUBLIC_SEP10_AUTH_PATH: z.string().trim().startsWith('/').default('/auth/sep10'),
-  NEXT_PUBLIC_SOROBAN_RPC_URL: z.string().trim().url(),
+  NEXT_PUBLIC_SOROBAN_RPC_URL: publicHttpUrl,
   NEXT_PUBLIC_SOROBAN_NETWORK: z.enum(['testnet', 'futurenet', 'mainnet']),
-  NEXT_PUBLIC_SENTRY_DSN: z.union([z.string().trim().url(), z.literal('')]).default(''),
+  NEXT_PUBLIC_SENTRY_DSN: z.union([publicHttpUrl, z.literal('')]).default(''),
   NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: z.string().trim().default(''),
 });
 
