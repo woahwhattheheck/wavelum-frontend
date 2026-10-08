@@ -24,6 +24,39 @@ describe('validatePublicEnv', () => {
     );
   });
 
+  it('rejects unsafe schemes and credentials in browser-visible service endpoints', () => {
+    for (const url of [
+      'javascript:alert(1)',
+      'file:///tmp/wallet',
+      'ftp://backend.example.test',
+      'https://user:secret@api.example.test',
+    ]) {
+      expect(() =>
+        validatePublicEnv({ ...validRequiredEnv, NEXT_PUBLIC_API_URL: url }),
+      ).toThrowError(/NEXT_PUBLIC_API_URL/);
+    }
+
+    expect(() =>
+      validatePublicEnv({
+        ...validRequiredEnv,
+        NEXT_PUBLIC_SOROBAN_RPC_URL: 'https://user:pass@rpc.example.test',
+      }),
+    ).toThrowError(/NEXT_PUBLIC_SOROBAN_RPC_URL/);
+
+    expect(() =>
+      validatePublicEnv({
+        ...validRequiredEnv,
+        NEXT_PUBLIC_SENTRY_DSN: 'file:///tmp/sentry',
+      }),
+    ).toThrowError(/NEXT_PUBLIC_SENTRY_DSN/);
+
+    expect(validatePublicEnv({
+      ...validRequiredEnv,
+      NEXT_PUBLIC_API_URL: 'http://localhost:4000',
+      NEXT_PUBLIC_SOROBAN_RPC_URL: 'https://rpc.example.test',
+    }).NEXT_PUBLIC_API_URL).toBe('http://localhost:4000');
+  });
+
   it('rejects invalid values and keeps local/test defaults typed', () => {
     expect(() =>
       validatePublicEnv({
